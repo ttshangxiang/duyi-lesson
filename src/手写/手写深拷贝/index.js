@@ -1,28 +1,37 @@
-function deepCopy(value) {
-  const cache = new Map() // 缓存遇到的对象，防止循环拷贝
-
-  function _deepCopy(value) {
-    if (value === null || typeof value !== "object") {
-      return value
-    }
-
-    if (cache.has(value)) {
-      return cache.get(value)
-    }
-
-    if (typeof value === "function") {
-      return value
-    }
-
-    const result = Array.isArray(value) ? [] : {}
-    cache.set(value, result)
-
-    for (const key in value) {
-      result[key] = _deepCopy(value[key])
-    }
-
-    return result
+function deepCopy(value, cache = new Map()) {
+  if (value === null || typeof value !== "object") {
+    return value
   }
 
-  return _deepCopy(value)
+  if (cache.has(value)) {
+    return cache.get(value)
+  }
+
+  if (value instanceof Date) {
+    return new Date(value)
+  }
+
+  if (value instanceof RegExp) {
+    return new RegExp(value)
+  }
+
+  if (value instanceof Set) {
+    return new Set(value)
+  }
+
+  if (value instanceof Map) {
+    return new Map(value)
+  }
+
+  const result = Array.isArray(value) ? [] : {}
+  cache.set(value, result)
+
+  const keys = [...Object.keys(value), ...Object.getOwnPropertySymbols(value)]
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(value, key)) {
+      result[key] = deepCopy(value[key], cache)
+    }
+  }
+
+  return result
 }
